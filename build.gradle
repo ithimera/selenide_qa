@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '2.8.1'
+}
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    allureVersion = '2.13.6'
+    junitVersion = '5.7.0'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    testImplementation 'io.cucumber:cucumber-java:6.10.4'
+    implementation('com.codeborne:selenide:5.16.1')
+    testImplementation("io.qameta.allure:allure-selenide:${allureVersion}")
+    testImplementation('org.slf4j:slf4j-simple:1.7.29')
+    testImplementation 'io.cucumber:cucumber-junit:6.10.4'
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.2'
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+test {
+    useJUnitPlatform()
+}
+allure {
+    autoconfigure = true
+    version = "${allureVersion}"
+
+    useJUnit5 {
+        version = "${allureVersion}"
+    }
+}
+
+task cucumberCli() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                    '--plugin', 'pretty',
+                    '--plugin', 'html:target/cucumber-report.html',
+                    '--glue', 'com.baeldung.cucumber',
+                    'src/test/resources']
+        }
+    }
+}
